@@ -1,0 +1,41 @@
+{
+    "name": "bensondevs/supercharged-enums",
+    "description": "Supercharged backed enum helpers (find, options, comparisons) with no framework dependencies.",
+    "type": "library",
+    "version": "0.1.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "BensonDevs"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.24",
+        "pestphp/pest": "^3.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "BensonDevs\\SuperchargedEnums\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BensonDevs\\SuperchargedEnums\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
