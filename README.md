@@ -18,6 +18,7 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
 - [Modular composition](#modular-composition)
 - [Bundled Common enums](#bundled-common-enums)
 - [Development](#development)
+- [Support](#support)
 - [License](#license)
 
 ## Installation
@@ -410,6 +411,15 @@ Behavior is covered by the [Pest test suite](tests/).
 composer test   # run Pest tests
 composer lint   # run Laravel Pint
 ```
+
+## Support
+
+If this package saves you time, consider supporting its maintenance:
+
+- [GitHub Sponsors](https://github.com/sponsors/bensondevs)
+- [Trakteer](https://trakteer.id/bensonsimeon/tip)
+
+Thank you for helping keep Supercharged Enums maintained.
 
 ## License
 
