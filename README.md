@@ -8,6 +8,7 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
 
 - [Installation](#installation)
   - [Laravel Boost](#laravel-boost)
+  - [Laravel Artisan stubs](#laravel-artisan-stubs)
 - [Quick start](#quick-start)
 - [Features](#features)
   - [Core helpers](#core-helpers)
@@ -47,6 +48,43 @@ php artisan boost:update --discover
 ```
 
 Boost integration is opt-in on the consumer side. The package remains framework-agnostic.
+
+### Laravel Artisan stubs
+
+For Laravel projects, you can publish a customized `enum.backed.stub` so `php artisan make:enum` generates backed enums with `EnumExtension` already applied.
+
+**Enable** (one-time, manual):
+
+```bash
+php artisan vendor:publish --tag=supercharged-enums-stubs
+```
+
+**Generate enums** as usual:
+
+```bash
+php artisan make:enum Status --string
+# or --int
+```
+
+Example output:
+
+```php
+use BensonDevs\SuperchargedEnums\EnumExtension;
+
+enum Status: string
+{
+    use EnumExtension;
+
+    //
+}
+```
+
+**Notes:**
+
+- Laravel-only and opt-in — publishing is required; non-Laravel projects are unaffected.
+- Only **backed** enums (`--string` / `--int`) use this stub. Pure unit enums are unchanged.
+- If your app already has `stubs/enum.backed.stub` (for example from `php artisan stub:publish`), use `--force` to overwrite — that replaces your existing customization.
+- Stub publishing is separate from [Laravel Boost](#laravel-boost); Boost skills and guidelines do not require publishing stubs.
 
 ## Quick start
 
