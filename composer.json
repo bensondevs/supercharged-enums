@@ -2,7 +2,7 @@
     "name": "bensondevs/supercharged-enums",
     "description": "Supercharged backed enum helpers (find, options, comparisons) with no framework dependencies.",
     "type": "library",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "authors": [
         {
