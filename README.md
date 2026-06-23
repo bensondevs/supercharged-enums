@@ -7,6 +7,7 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
 ## Table of contents
 
 - [Installation](#installation)
+  - [Laravel Boost](#laravel-boost)
 - [Quick start](#quick-start)
 - [Features](#features)
   - [Core helpers](#core-helpers)
@@ -26,6 +27,26 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
 ```bash
 composer require bensondevs/supercharged-enums
 ```
+
+### Laravel Boost
+
+This package ships [Laravel Boost](https://laravel.com/docs/13.x/boost) AI resources for coding agents:
+
+- **Skill** (`supercharged-enums-development`) — on-demand patterns for `EnumExtension`, lookup, select maps, comparisons, and bundled `Common\` enums
+- **Guidelines** — always-loaded overview and conventions
+
+Boost discovers these automatically from `resources/boost/` in the installed package. No ServiceProvider or extra configuration is required in this library.
+
+In a Laravel project that uses Boost:
+
+```bash
+composer require laravel/boost --dev   # if not already installed
+php artisan boost:install              # select skills; enable bensondevs/supercharged-enums
+# or, for an existing Boost setup:
+php artisan boost:update --discover
+```
+
+Boost integration is opt-in on the consumer side. The package remains framework-agnostic.
 
 ## Quick start
 
