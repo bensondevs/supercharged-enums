@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use ValueError;
 
+/**
+ * @template T of BackedEnum
+ *
+ * @implements CastsAttributes<?Collection<int, T>, iterable<int, mixed>|Collection<int, mixed>>
+ */
 final class EnumExtensionCollectionCast implements CastsAttributes, SerializesCastableAttributes
 {
     use ResolvesBackedEnumJsonArray;
@@ -26,7 +31,7 @@ final class EnumExtensionCollectionCast implements CastsAttributes, SerializesCa
     }
 
     /**
-     * @return ?Collection<int, BackedEnum>
+     * @return ?Collection<int, T>
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?Collection
     {
@@ -36,6 +41,7 @@ final class EnumExtensionCollectionCast implements CastsAttributes, SerializesCa
             return null;
         }
 
+        /** @var Collection<int, T> */
         return collect($data)->map(function (mixed $item): BackedEnum {
             if ($this->lenient) {
                 return $this->findOrDefault($item);
@@ -67,11 +73,12 @@ final class EnumExtensionCollectionCast implements CastsAttributes, SerializesCa
     }
 
     /**
+     * @param  Collection<int, T>  $value
      * @return array<int, string|int>
      */
     public function serialize(Model $model, string $key, mixed $value, array $attributes): array
     {
-        return collect($value)
+        return $value
             ->map(fn (BackedEnum $enum): string | int => $enum->value)
             ->values()
             ->all();

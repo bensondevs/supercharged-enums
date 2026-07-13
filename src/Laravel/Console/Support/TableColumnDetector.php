@@ -8,13 +8,29 @@ use Illuminate\Support\Facades\Schema;
 
 final class TableColumnDetector
 {
-    private const ID_CANDIDATES = ['id'];
+    /** @return list<string> */
+    private static function idCandidates(): array
+    {
+        return ['id'];
+    }
 
-    private const VALUE_CANDIDATES = ['slug', 'code', 'name', 'id'];
+    /** @return list<string> */
+    private static function valueCandidates(): array
+    {
+        return ['slug', 'code', 'name', 'id'];
+    }
 
-    private const LABEL_CANDIDATES = ['label', 'title', 'description', 'name'];
+    /** @return list<string> */
+    private static function labelCandidates(): array
+    {
+        return ['label', 'title', 'description', 'name'];
+    }
 
-    private const SORT_CANDIDATES = ['sort_order', 'position', 'order'];
+    /** @return list<string> */
+    private static function sortCandidates(): array
+    {
+        return ['sort_order', 'position', 'order'];
+    }
 
     /**
      * @param  array{
@@ -40,15 +56,15 @@ final class TableColumnDetector
             throw new \InvalidArgumentException("Table [{$table}] does not exist or has no columns.");
         }
 
-        $idColumn = $this->resolveColumn($columns, $overrides['id_column'] ?? null, self::ID_CANDIDATES)
+        $idColumn = $this->resolveColumn($columns, $overrides['id_column'] ?? null, self::idCandidates())
             ?? 'id';
 
-        $valueColumn = $this->resolveColumn($columns, $overrides['value_column'] ?? null, self::VALUE_CANDIDATES)
+        $valueColumn = $this->resolveColumn($columns, $overrides['value_column'] ?? null, self::valueCandidates())
             ?? $idColumn;
 
         $labelColumn = $this->resolveLabelColumn($columns, $overrides['label_column'] ?? null, $valueColumn);
 
-        $sortColumn = $this->resolveColumn($columns, $overrides['sort_column'] ?? null, self::SORT_CANDIDATES)
+        $sortColumn = $this->resolveColumn($columns, $overrides['sort_column'] ?? null, self::sortCandidates())
             ?? $idColumn;
 
         $valueIsInteger = $this->columnIsInteger($table, $valueColumn, $connection)
@@ -96,7 +112,7 @@ final class TableColumnDetector
             return $override;
         }
 
-        foreach (self::LABEL_CANDIDATES as $candidate) {
+        foreach (self::labelCandidates() as $candidate) {
             if ($candidate === $valueColumn) {
                 continue;
             }

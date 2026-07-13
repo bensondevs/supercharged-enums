@@ -52,7 +52,7 @@ final class EnumImporterNameResolver
         $segments = explode('\\', $namespace);
         $pathSegments = array_map(static fn (string $segment): string => Str::studly($segment), $segments);
 
-        if ($pathSegments !== [] && $pathSegments[0] === 'App') {
+        if ($pathSegments[0] === 'App') {
             $pathSegments[0] = 'app';
         }
 

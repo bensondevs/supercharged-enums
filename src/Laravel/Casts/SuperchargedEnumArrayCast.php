@@ -10,10 +10,16 @@ use BensonDevs\SuperchargedEnums\SuperchargedEnum;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Contracts\Database\Eloquent\SerializesCastableAttributes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use ValueError;
 
 use function BensonDevs\SuperchargedEnums\supercharge;
 
+/**
+ * @template T of BackedEnum
+ *
+ * @implements CastsAttributes<?array<int, SuperchargedEnum<T>>, iterable<int, mixed>|Collection<int, mixed>>
+ */
 final class SuperchargedEnumArrayCast implements CastsAttributes, SerializesCastableAttributes
 {
     use ResolvesBackedEnumJsonArray;
@@ -27,7 +33,7 @@ final class SuperchargedEnumArrayCast implements CastsAttributes, SerializesCast
     }
 
     /**
-     * @return ?array<int, SuperchargedEnum>
+     * @return ?array<int, SuperchargedEnum<T>>
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?array
     {
@@ -37,7 +43,9 @@ final class SuperchargedEnumArrayCast implements CastsAttributes, SerializesCast
             return null;
         }
 
-        $type = supercharge($this->enumClass);
+        /** @var class-string<T> $enumClass */
+        $enumClass = $this->enumClass;
+        $type = supercharge($enumClass);
 
         return array_map(function (mixed $item) use ($type): SuperchargedEnum {
             if ($this->lenient) {
@@ -82,6 +90,9 @@ final class SuperchargedEnumArrayCast implements CastsAttributes, SerializesCast
 
     protected function resolveCaseForSet(string | int $value): ?BackedEnum
     {
-        return supercharge($this->enumClass)->find($value);
+        /** @var class-string<T> $enumClass */
+        $enumClass = $this->enumClass;
+
+        return supercharge($enumClass)->find($value);
     }
 }

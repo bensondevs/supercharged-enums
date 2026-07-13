@@ -77,13 +77,18 @@ trait ResolvesBackedEnumJsonArray
         return json_encode($backingValues, JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * @return iterable<int, mixed>
+     */
     protected function normalizeInputIterable(mixed $value): iterable
     {
         if ($value instanceof Collection) {
+            /** @var Collection<int, mixed> $value */
             return $value;
         }
 
         if (is_array($value)) {
+            /** @var array<int, mixed> $value */
             return $value;
         }
 

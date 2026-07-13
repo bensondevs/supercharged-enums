@@ -80,11 +80,14 @@ final class BackedEnumLookup
     private static function resolveViaAliases(string $enumClass, string | int $normalized): ?BackedEnum
     {
         foreach ($enumClass::cases() as $case) {
-            foreach ($case->alias() as $alias) {
-                if (! is_string($alias) && ! is_int($alias)) {
-                    continue;
-                }
+            if (! method_exists($case, 'alias')) {
+                continue;
+            }
 
+            /** @var list<string|int> $aliases */
+            $aliases = $case->alias();
+
+            foreach ($aliases as $alias) {
                 $aliasNormalized = self::normalizeScalarKey($enumClass, $alias);
 
                 if ($aliasNormalized === null || $aliasNormalized !== $normalized) {
@@ -112,10 +115,10 @@ final class BackedEnumLookup
         return match ($backingType->getName()) {
             'int' => match (true) {
                 is_int($key) => $key,
-                is_string($key) && filter_var($key, FILTER_VALIDATE_INT) !== false => (int) $key,
+                filter_var($key, FILTER_VALIDATE_INT) !== false => (int) $key,
                 default => null,
             },
-            'string' => is_string($key) ? $key : (string) $key,
+            'string' => is_int($key) ? (string) $key : $key,
             default => null,
         };
     }

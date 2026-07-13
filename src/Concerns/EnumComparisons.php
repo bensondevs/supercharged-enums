@@ -19,6 +19,9 @@ trait EnumComparisons
         return BackedEnumComparisons::is(static::class, $this, $enum);
     }
 
+    /**
+     * @param  array<int, static|string|int|null>  $enums
+     */
     public function isIn(array $enums, bool $strict = false): bool
     {
         return BackedEnumComparisons::isIn(static::class, $this, $enums, $strict);
@@ -29,6 +32,9 @@ trait EnumComparisons
         return BackedEnumComparisons::isNot(static::class, $this, $enum);
     }
 
+    /**
+     * @param  array<int, static|string|int|null>  $enums
+     */
     public function isNotIn(array $enums, bool $strict = false): bool
     {
         return BackedEnumComparisons::isNotIn(static::class, $this, $enums, $strict);

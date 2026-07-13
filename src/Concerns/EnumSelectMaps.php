@@ -16,6 +16,9 @@ trait EnumSelectMaps
         return BackedEnumSelectMaps::options(static::class);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function asSelectOptions(): array
     {
         return self::options();
@@ -32,10 +35,11 @@ trait EnumSelectMaps
     /**
      * Cases included in select maps. When {@see selectables()} exists it wins over {@see unselectables()}.
      *
-     * @return array<static>
+     * @return array<int, static>
      */
     public static function filteredCases(): array
     {
+        /** @var array<int, static> */
         return BackedEnumSelectMaps::filteredCases(static::class);
     }
 
@@ -46,6 +50,7 @@ trait EnumSelectMaps
      */
     public static function all(): array
     {
+        /** @var array<int, static> */
         return BackedEnumSelectMaps::all(static::class);
     }
 
@@ -56,6 +61,7 @@ trait EnumSelectMaps
      */
     public static function collect(): object
     {
+        /** @var \Illuminate\Support\Collection<int, static> */
         return BackedEnumSelectMaps::collect(static::class);
     }
 }

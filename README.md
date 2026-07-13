@@ -1,5 +1,10 @@
 # ⚡ Supercharged Enums
 
+[![CI](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml/badge.svg)](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml)
+[![Stable Version](https://img.shields.io/packagist/v/bensondevs/supercharged-enums?label=stable&style=flat-square)](https://packagist.org/packages/bensondevs/supercharged-enums)
+[![Total Downloads](https://img.shields.io/packagist/dt/bensondevs/supercharged-enums?style=flat-square)](https://packagist.org/packages/bensondevs/supercharged-enums)
+[![Type Coverage](https://img.shields.io/badge/type--coverage-100%25-brightgreen?style=flat-square)](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml)
+
 Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtension` trait—no framework dependencies. The package also ships optional ready-made enums for everyday domains (HTTP, calendar and time, measurement units, finance, logging, deployment environments, and more) under `BensonDevs\SuperchargedEnums\Common\`, each wired with the same helpers. See [Bundled Common enums](#bundled-common-enums).
 
 **Requirements:** PHP 8.2 or later. The `EnumExtension` trait targets **backed** enums (`string` or `int`). Pure unit enums without a backing type are not supported by lookup normalization.
@@ -701,8 +706,10 @@ Behavior is covered by the [Pest test suite](tests/).
 ## Development
 
 ```bash
-composer test   # run Pest tests
-composer lint   # run Laravel Pint
+composer test          # run Pest tests
+composer lint          # run Laravel Pint (check only)
+composer analyse       # PHPStan
+composer type-coverage # PHPStan type coverage (100% enforced)
 ```
 
 ## Support

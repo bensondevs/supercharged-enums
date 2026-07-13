@@ -45,6 +45,9 @@ final class SuperchargedEnum implements Stringable
         return BackedEnumComparisons::is($this->enumClass(), $this->enum, $other);
     }
 
+    /**
+     * @param  array<int, UnitEnum|string|int|null>  $enums
+     */
     public function isIn(array $enums, bool $strict = false): bool
     {
         if (method_exists($this->enum, 'isIn')) {
@@ -63,6 +66,9 @@ final class SuperchargedEnum implements Stringable
         return BackedEnumComparisons::isNot($this->enumClass(), $this->enum, $other);
     }
 
+    /**
+     * @param  array<int, UnitEnum|string|int|null>  $enums
+     */
     public function isNotIn(array $enums, bool $strict = false): bool
     {
         if (method_exists($this->enum, 'isNotIn')) {
@@ -209,6 +215,9 @@ final class SuperchargedEnum implements Stringable
         throw new \InvalidArgumentException(sprintf('Undefined property %s on %s.', $name, self::class));
     }
 
+    /**
+     * @param  array<int, mixed>  $arguments
+     */
     public function __call(string $name, array $arguments): mixed
     {
         if (! method_exists($this->enum, $name)) {

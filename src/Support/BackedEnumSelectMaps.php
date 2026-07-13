@@ -64,8 +64,10 @@ final class BackedEnumSelectMaps
     }
 
     /**
-     * @param  class-string<BackedEnum>  $enumClass
-     * @return array<int, BackedEnum>
+     * @template T of BackedEnum
+     *
+     * @param  class-string<T>  $enumClass
+     * @return array<int, T>
      */
     public static function filteredCases(string $enumClass): array
     {
@@ -83,37 +85,45 @@ final class BackedEnumSelectMaps
             return self::filterCases($enumClass, null, $denied);
         }
 
+        /** @var array<int, T> */
         return $enumClass::cases();
     }
 
     /**
-     * @param  class-string<BackedEnum>  $enumClass
+     * @template T of BackedEnum
+     *
+     * @param  class-string<T>  $enumClass
      * @param  ?array<int, BackedEnum|int|string>  $selectables
      * @param  ?array<int, BackedEnum|int|string>  $unselectables
-     * @return array<int, BackedEnum>
+     * @return array<int, T>
      */
     public static function filterCases(string $enumClass, ?array $selectables, ?array $unselectables): array
     {
         if ($selectables !== null) {
+            /** @var array<int, T> */
             return array_values(array_filter(
                 $enumClass::cases(),
-                static fn ($case) => self::caseIsListed($enumClass, $case, $selectables),
+                static fn (BackedEnum $case): bool => self::caseIsListed($enumClass, $case, $selectables),
             ));
         }
 
         if ($unselectables !== null) {
+            /** @var array<int, T> */
             return array_values(array_filter(
                 $enumClass::cases(),
-                static fn ($case) => ! self::caseIsListed($enumClass, $case, $unselectables),
+                static fn (BackedEnum $case): bool => ! self::caseIsListed($enumClass, $case, $unselectables),
             ));
         }
 
+        /** @var array<int, T> */
         return $enumClass::cases();
     }
 
     /**
-     * @param  class-string<BackedEnum>  $enumClass
-     * @return array<int, BackedEnum>
+     * @template T of BackedEnum
+     *
+     * @param  class-string<T>  $enumClass
+     * @return array<int, T>
      */
     public static function all(string $enumClass): array
     {

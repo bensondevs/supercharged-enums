@@ -106,7 +106,10 @@ final class EnumFileRenderer
             $arms[] = '            self::' . $case->name . ' => [' . implode(', ', $formattedAliases) . '],';
         }
 
-        return PHP_EOL . PHP_EOL . '    public function alias(): array' . PHP_EOL
+        return PHP_EOL . PHP_EOL . '    /**' . PHP_EOL
+            . '     * @return list<string|int>' . PHP_EOL
+            . '     */' . PHP_EOL
+            . '    public function alias(): array' . PHP_EOL
             . '    {' . PHP_EOL
             . '        return match ($this) {' . PHP_EOL
             . implode(PHP_EOL, $arms) . PHP_EOL

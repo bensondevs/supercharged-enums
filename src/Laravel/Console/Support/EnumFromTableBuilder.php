@@ -13,7 +13,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -36,7 +36,8 @@ final class EnumFromTableBuilder
         }
 
         $backingType = $this->resolveBackingType($columns, $options['backing_type'] ?? null);
-        $withLabels = ($options['with_labels'] ?? true) && $columns['label'] !== null;
+        $labelColumn = $columns['label'];
+        $withLabels = ($options['with_labels'] ?? true) && $labelColumn !== null;
         $withAliases = ($options['with_aliases'] ?? false) && $this->canGenerateAliases($columns, $backingType);
 
         $sortedRows = $this->sortRows($rows, $columns['sort']);
@@ -60,8 +61,8 @@ final class EnumFromTableBuilder
             $seenBackingValues[(string) $backingValue] = true;
             $seenCaseNames[$caseName] = true;
 
-            $label = $withLabels && $columns['label'] !== null
-                ? (string) $rowArray[$columns['label']]
+            $label = $withLabels
+                ? (string) $rowArray[$labelColumn]
                 : null;
 
             $aliases = $withAliases
@@ -145,7 +146,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -192,7 +193,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -201,7 +202,7 @@ final class EnumFromTableBuilder
      */
     private function resolveCaseName(array $row, array $columns, string | int $backingValue): string
     {
-        if (isset($columns['name']) && is_string($columns['name']) && array_key_exists($columns['name'], $row)) {
+        if (isset($columns['name']) && array_key_exists($columns['name'], $row)) {
             $source = trim((string) $row[$columns['name']]);
 
             if ($source !== '') {
@@ -260,7 +261,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -284,7 +285,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -310,7 +311,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
-     *     name?: ?string,
+     *     name?: string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -336,7 +337,7 @@ final class EnumFromTableBuilder
 
         if ($backingType === 'int' && $columns['value'] === $columns['id']) {
             $alternate = $this->firstPresentString($row, ['name', 'slug', 'code']);
-        } elseif ($backingType === 'int' && isset($columns['name']) && is_string($columns['name'])) {
+        } elseif ($backingType === 'int' && isset($columns['name'])) {
             $alternate = $this->firstPresentString($row, [$columns['name']]);
         } else {
             $alternate = null;

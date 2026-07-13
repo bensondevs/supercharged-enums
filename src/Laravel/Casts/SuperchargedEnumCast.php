@@ -13,9 +13,14 @@ use ValueError;
 
 use function BensonDevs\SuperchargedEnums\supercharge;
 
+/**
+ * @template T of BackedEnum
+ *
+ * @implements CastsAttributes<?SuperchargedEnum<T>, BackedEnum|SuperchargedEnum|string|int|null>
+ */
 final class SuperchargedEnumCast implements CastsAttributes, SerializesCastableAttributes
 {
-    /** @var class-string<BackedEnum> */
+    /** @var class-string<T> */
     private readonly string $enumClass;
 
     private readonly bool $lenient;
@@ -51,13 +56,18 @@ final class SuperchargedEnumCast implements CastsAttributes, SerializesCastableA
         return self::class . ':' . $enumClass . ($lenient ? ',lenient' : '');
     }
 
+    /**
+     * @return SuperchargedEnum<T>|null
+     */
     public function get(Model $model, string $key, mixed $value, array $attributes): ?SuperchargedEnum
     {
         if ($value === null) {
             return null;
         }
 
-        $type = supercharge($this->enumClass);
+        /** @var class-string<T> $enumClass */
+        $enumClass = $this->enumClass;
+        $type = supercharge($enumClass);
 
         if ($this->lenient) {
             return supercharge($type->findOrDefault($value));
@@ -69,13 +79,16 @@ final class SuperchargedEnumCast implements CastsAttributes, SerializesCastableA
             throw new ValueError(sprintf(
                 '"%s" is not a valid backing value for enum %s',
                 is_scalar($value) ? (string) $value : get_debug_type($value),
-                $this->enumClass,
+                $enumClass,
             ));
         }
 
         return supercharge($case);
     }
 
+    /**
+     * @param  BackedEnum|SuperchargedEnum<T>|string|int|null  $value
+     */
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
         if ($value === null) {
@@ -98,12 +111,14 @@ final class SuperchargedEnumCast implements CastsAttributes, SerializesCastableA
             return $value->value;
         }
 
-        $resolved = supercharge($this->enumClass)->find($value);
+        /** @var class-string<T> $enumClass */
+        $enumClass = $this->enumClass;
+        $resolved = supercharge($enumClass)->find($value);
 
         if ($resolved === null) {
             throw new ValueError(sprintf(
                 '"%s" is not a valid backing value for enum %s',
-                is_scalar($value) ? (string) $value : get_debug_type($value),
+                (string) $value,
                 $this->enumClass,
             ));
         }
