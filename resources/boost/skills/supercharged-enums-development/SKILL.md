@@ -117,10 +117,14 @@ Duplicate aliases across cases are undefined; first match in `cases()` order win
 Status::options();                // ['draft' => 'Draft', 'published' => 'Published']
 Status::asSelectOptions();        // Alias for options()
 Status::asSelectDescriptions();   // Backing value → longer description
+Status::all();                    // [Status::Draft, Status::Published] — filtered cases
+Status::collect();                // Illuminate\Support\Collection of filtered cases
 
 Status::Published->getKey();        // 'draft' — backing value
 Status::Published->getName();       // 'Published' — title-cased case name
 ```
+
+`collect()` requires `illuminate/support`.
 
 **Label resolution** (`options()`), first match wins: `label()` → `getLabel()` → `getName()` → raw case name.
 
@@ -176,7 +180,7 @@ Status::values();  // ['draft', 'published'] — backing values
 Use individual traits from `BensonDevs\SuperchargedEnums\Concerns\` instead of the full `EnumExtension`:
 
 - `EnumLookup` — `find()`, `findOrDefault()`
-- `EnumSelectMaps` — `options()`, `asSelectDescriptions()`
+- `EnumSelectMaps` — `options()`, `asSelectDescriptions()`, `all()`, `collect()`, `filteredCases()`
 - `EnumComparisons` — ordering and navigation
 - `EnumNaming` — `getKey()`, `getName()`
 - `EnumCaseListing` — `names()`, `values()`

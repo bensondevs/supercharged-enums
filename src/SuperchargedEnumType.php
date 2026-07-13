@@ -180,6 +180,30 @@ final class SuperchargedEnumType
     }
 
     /**
+     * @return array<int, T>
+     */
+    public function all(): array
+    {
+        if (method_exists($this->enumClass, 'all')) {
+            return $this->enumClass::all();
+        }
+
+        return BackedEnumSelectMaps::all($this->enumClass);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, T>
+     */
+    public function collect(): object
+    {
+        if (method_exists($this->enumClass, 'collect')) {
+            return $this->enumClass::collect();
+        }
+
+        return BackedEnumSelectMaps::collect($this->enumClass);
+    }
+
+    /**
      * @param  T|UnitEnum|string|int|null  ...$enums
      * @return T|null
      */

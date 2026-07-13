@@ -76,6 +76,30 @@ final class BackedEnumSelectMaps
 
     /**
      * @param  class-string<BackedEnum>  $enumClass
+     * @return array<int, BackedEnum>
+     */
+    public static function all(string $enumClass): array
+    {
+        return self::filteredCases($enumClass);
+    }
+
+    /**
+     * @param  class-string<BackedEnum>  $enumClass
+     * @return \Illuminate\Support\Collection<int, BackedEnum>
+     */
+    public static function collect(string $enumClass): object
+    {
+        if (! class_exists(\Illuminate\Support\Collection::class)) {
+            throw new \RuntimeException(
+                'collect() requires illuminate/support. Install it with: composer require illuminate/support',
+            );
+        }
+
+        return new \Illuminate\Support\Collection(self::all($enumClass));
+    }
+
+    /**
+     * @param  class-string<BackedEnum>  $enumClass
      * @param  array<int, BackedEnum|int|string>  $entries
      */
     private static function caseIsListed(string $enumClass, object $case, array $entries): bool

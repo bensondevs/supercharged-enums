@@ -14,7 +14,7 @@
     },
     "suggest": {
         "illuminate/database": "Required for SuperchargedEnumCast Eloquent casting.",
-        "illuminate/support": "Required for Laravel stub publishing (included in all Laravel apps)."
+        "illuminate/support": "Required for collect() and Laravel stub publishing (included in all Laravel apps)."
     },
     "require-dev": {
         "laravel/pint": "^1.24",

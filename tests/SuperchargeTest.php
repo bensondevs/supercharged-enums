@@ -91,3 +91,11 @@ test('supercharge type exposes core static helpers', function () {
     expect($type->min('other', PlainBackedEnum::Something))->toBe(PlainBackedEnum::Something);
     expect($type->max('other', PlainBackedEnum::Something))->toBe(PlainBackedEnum::Other);
 });
+
+test('supercharge type exposes all and collect', function () {
+    $type = supercharge(PlainBackedEnum::class);
+
+    expect($type->all())->toBe(PlainBackedEnum::cases());
+    expect($type->collect())->toBeInstanceOf(Illuminate\Support\Collection::class);
+    expect($type->collect()->all())->toBe(PlainBackedEnum::cases());
+});

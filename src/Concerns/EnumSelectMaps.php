@@ -38,4 +38,24 @@ trait EnumSelectMaps
     {
         return BackedEnumSelectMaps::filteredCases(static::class);
     }
+
+    /**
+     * Filtered enum cases as an array. Alias for {@see filteredCases()}.
+     *
+     * @return array<int, static>
+     */
+    public static function all(): array
+    {
+        return BackedEnumSelectMaps::all(static::class);
+    }
+
+    /**
+     * Filtered enum cases as a Laravel Collection.
+     *
+     * @return \Illuminate\Support\Collection<int, static>
+     */
+    public static function collect(): object
+    {
+        return BackedEnumSelectMaps::collect(static::class);
+    }
 }

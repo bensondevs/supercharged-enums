@@ -283,7 +283,12 @@ Build `value => label` maps for HTML `<select>` elements, JSON APIs, and similar
 Status::options();              // ['draft' => 'Draft', 'published' => 'Published'] — backing value → short label
 Status::asSelectOptions();      // Alias for options()
 Status::asSelectDescriptions(); // Backing value → longer description text
+Status::all();                  // [Status::Draft, Status::Published] — filtered cases as array
+Status::collect();              // Illuminate\Support\Collection of filtered cases
+Status::filteredCases();        // Same cases as all() (alias)
 ```
+
+`collect()` requires `illuminate/support` (included in Laravel apps). Without it, calling `collect()` throws a runtime exception with install instructions.
 
 **Label resolution** (`options()`), first match wins:
 
