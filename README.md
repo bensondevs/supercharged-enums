@@ -18,6 +18,7 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
   - [Select maps](#select-maps)
   - [Comparisons and ordering](#comparisons-and-ordering)
 - [Runtime supercharge](#runtime-supercharge)
+  - [Laravel Eloquent casting](#laravel-eloquent-casting)
 - [Modular composition](#modular-composition)
 - [Bundled Common enums](#bundled-common-enums)
 - [Development](#development)
@@ -443,6 +444,44 @@ supercharge(VendorStatus::class)->options();              // ['open' => 'Open', 
 - `find()` / `findOrDefault()` on the class wrapper return **native enum cases** (not wrappers). Wrap the result with `supercharge()` when you need instance helpers.
 - Custom enum methods remain available via `supercharge($case)->yourMethod()` (forwarded with `__call`).
 - Enums that already use `EnumExtension` work with `supercharge()` too; the wrapper delegates to existing methods when present.
+
+### Laravel Eloquent casting
+
+For Laravel models whose attributes use vendor enums, add [`SuperchargedEnumCast`](src/Laravel/Casts/SuperchargedEnumCast.php) so the attribute is a `SuperchargedEnum` on read while the database stores the backing scalar.
+
+```php
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumCast;
+use Vendor\Package\OrderStatus;
+
+class Order extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            // Strict (default) — invalid DB value throws on read
+            'status' => SuperchargedEnumCast::of(OrderStatus::class),
+
+            // Lenient — unknown DB value falls back to default case
+            'legacy_status' => SuperchargedEnumCast::of(OrderStatus::class, lenient: true),
+
+            // Via supercharge() helper
+            'status' => supercharge(OrderStatus::class)->cast(),
+        ];
+    }
+}
+
+$order->status->is('open');
+$order->status->unwrap();           // native OrderStatus for type-hinted APIs
+$order->toArray()['status'];        // 'open' (backing value, not wrapper)
+```
+
+| Scenario | Recommended approach |
+|----------|---------------------|
+| You own the enum | `use EnumExtension` on the enum + Laravel's built-in enum cast |
+| Vendor enum on a model attribute | `SuperchargedEnumCast::of(VendorEnum::class)` |
+| Legacy column with bad data | `SuperchargedEnumCast::of(VendorEnum::class, lenient: true)` |
+
+Requires `illuminate/database` (included in Laravel). Invalid values on **assignment** always throw; lenient mode applies to **reading** unknown DB values only.
 
 ## Modular composition
 

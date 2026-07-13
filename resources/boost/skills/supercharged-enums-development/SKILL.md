@@ -1,6 +1,6 @@
 ---
 name: supercharged-enums-development
-description: Build backed PHP enums with EnumExtension — lookup, select maps, comparisons, labels, bundled Common enums, and runtime supercharge() for unextended enums. Use when creating or editing enums, form options, status/state logic, unit conversions, or wrapping vendor enums in bensondevs/supercharged-enums.
+description: Build backed PHP enums with EnumExtension — lookup, select maps, comparisons, labels, bundled Common enums, runtime supercharge() for unextended enums, and SuperchargedEnumCast for Laravel models. Use when creating or editing enums, form options, status/state logic, unit conversions, wrapping vendor enums, or casting Eloquent attributes in bensondevs/supercharged-enums.
 ---
 
 # Supercharged Enums Development
@@ -15,6 +15,7 @@ Use this skill when working with `bensondevs/supercharged-enums`:
 - Comparing, ordering, or navigating enum cases
 - Using bundled domain enums under `BensonDevs\SuperchargedEnums\Common\`
 - Wrapping vendor or unextended backed enums with `supercharge()`
+- Casting Laravel Eloquent attributes for vendor enums with `SuperchargedEnumCast`
 
 ## Requirements
 
@@ -47,6 +48,31 @@ supercharge(VendorStatus::Open)->is('open');
 supercharge(VendorStatus::class)->find('open');
 supercharge($case)->unwrap(); // when a native enum is required
 ```
+
+## Laravel Eloquent casting
+
+For model attributes backed by vendor enums:
+
+```php
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumCast;
+
+protected function casts(): array
+{
+    return [
+        'status' => SuperchargedEnumCast::of(VendorStatus::class),
+        'legacy_status' => SuperchargedEnumCast::of(VendorStatus::class, lenient: true),
+        'status' => supercharge(VendorStatus::class)->cast(),
+    ];
+}
+
+// $order->status->is('open')
+// $order->status->unwrap() — native enum
+// $order->toArray()['status'] — backing scalar
+```
+
+- **Strict (default):** invalid DB value throws on read (like Laravel's enum cast).
+- **Lenient:** `lenient: true` uses `findOrDefault()` on read for legacy bad data.
+- **Writes** always validate — invalid assignment throws.
 
 ## Core helpers
 

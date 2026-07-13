@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BensonDevs\SuperchargedEnums;
 
 use BackedEnum;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumCast;
 use BensonDevs\SuperchargedEnums\Support\BackedEnumCaseListing;
 use BensonDevs\SuperchargedEnums\Support\BackedEnumComparisons;
 use BensonDevs\SuperchargedEnums\Support\BackedEnumCore;
@@ -41,6 +42,11 @@ final class SuperchargedEnumType
     public function enumClass(): string
     {
         return $this->enumClass;
+    }
+
+    public function cast(bool $lenient = false): string
+    {
+        return SuperchargedEnumCast::of($this->enumClass, $lenient);
     }
 
     /**

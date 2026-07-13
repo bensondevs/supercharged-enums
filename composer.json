@@ -13,10 +13,12 @@
         "php": "^8.2"
     },
     "suggest": {
+        "illuminate/database": "Required for SuperchargedEnumCast Eloquent casting.",
         "illuminate/support": "Required for Laravel stub publishing (included in all Laravel apps)."
     },
     "require-dev": {
         "laravel/pint": "^1.24",
+        "orchestra/testbench": "^9.0",
         "pestphp/pest": "^3.8"
     },
     "autoload": {
