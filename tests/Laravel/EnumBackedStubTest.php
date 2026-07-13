@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 it('ships a backed enum stub for Laravel make:enum', function (): void {
-    $stubFile = __DIR__.'/../../stubs/enum.backed.stub';
+    $stubFile = __DIR__ . '/../../stubs/enum.backed.stub';
 
     expect(file_exists($stubFile))->toBeTrue();
 

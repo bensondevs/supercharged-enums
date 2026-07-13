@@ -1,6 +1,6 @@
 ## Supercharged Enums
 
-`bensondevs/supercharged-enums` provides backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtension` trait. It has no framework dependencies and ships optional ready-made domain enums under `BensonDevs\SuperchargedEnums\Common\`.
+`bensondevs/supercharged-enums` provides backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtension` trait, or at runtime via `supercharge()` for enums you cannot modify. It has no framework dependencies and ships optional ready-made domain enums under `BensonDevs\SuperchargedEnums\Common\`.
 
 ### Installation
 
@@ -27,6 +27,16 @@ Status::options();                   // ['draft' => 'Draft', 'published' => 'Pub
 Status::Draft->isBefore(Status::Published); // true (declaration order)
 ```
 
+### Runtime supercharge (vendor / unextended enums)
+
+```php
+use function BensonDevs\SuperchargedEnums\supercharge;
+
+supercharge(VendorStatus::Open)->is('open');
+supercharge(VendorStatus::class)->find('open');
+supercharge($case)->unwrap(); // native enum when required
+```
+
 ### Conventions agents must follow
 
 1. **Backed enums only** — `EnumExtension` targets `string`- or `int`-backed enums. Pure unit enums are unsupported.
@@ -34,5 +44,6 @@ Status::Draft->isBefore(Status::Published); // true (declaration order)
 3. **Ordering uses declaration order**, not backing values. `isBefore`, `next`, `min`, `max`, and related helpers index into `cases()`.
 4. **`find()` accepts** an enum instance, backing scalar, or `null`. Optional `alias()` keys work only when `strict` is `false`.
 5. **Prefer bundled `Common\` enums** for standard domains (HTTP, time, measure, finance, logging, etc.) before inventing new enums.
+6. **Use `supercharge()`** for backed enums you cannot modify (vendor, generated). Pass a case for instance helpers or `SomeEnum::class` for `find()` / `options()`. Call `unwrap()` when a native enum is required.
 
 Full documentation: https://github.com/bensondevs/supercharged-enums

@@ -9,6 +9,7 @@ use BensonDevs\SuperchargedEnums\Concerns\EnumComparisons;
 use BensonDevs\SuperchargedEnums\Concerns\EnumLookup;
 use BensonDevs\SuperchargedEnums\Concerns\EnumNaming;
 use BensonDevs\SuperchargedEnums\Concerns\EnumSelectMaps;
+use BensonDevs\SuperchargedEnums\Support\BackedEnumCore;
 
 trait EnumExtension
 {
@@ -30,8 +31,7 @@ trait EnumExtension
 
     public static function random(): static
     {
-        $cases = self::cases();
-
-        return $cases[array_rand($cases)];
+        /** @var static */
+        return BackedEnumCore::random(static::class);
     }
 }

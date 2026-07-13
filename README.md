@@ -17,6 +17,7 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
   - [Naming](#naming)
   - [Select maps](#select-maps)
   - [Comparisons and ordering](#comparisons-and-ordering)
+- [Runtime supercharge](#runtime-supercharge)
 - [Modular composition](#modular-composition)
 - [Bundled Common enums](#bundled-common-enums)
 - [Development](#development)
@@ -403,6 +404,45 @@ Month::min(Month::March, Month::October);      // Month::March
 Month::min('march', 'october');                // Month::March
 Month::max(Month::March, 'october');           // Month::October
 ```
+
+## Runtime supercharge
+
+When you cannot add `EnumExtension` to an enum (vendor code, generated enums, or one-off usage), wrap it at runtime with `supercharge()`. PHP cannot attach methods to enum instances dynamically, so this returns a **wrapper object** — not the native enum type. Use `unwrap()` when an API expects the raw case.
+
+```php
+use function BensonDevs\SuperchargedEnums\supercharge;
+
+enum VendorStatus: string
+{
+    case Open = 'open';
+    case Closed = 'closed';
+}
+
+// Instance API — comparisons, naming, navigation
+$status = supercharge(VendorStatus::Open);
+$status->is('open');              // true
+$status->getName();               // "Open"
+$status->value;                   // 'open' (via property access)
+$status->unwrap();                // VendorStatus::Open
+
+// Static API — lookup, select maps, aggregates (pass the class string)
+supercharge(VendorStatus::class)->find('open');           // VendorStatus::Open
+supercharge(VendorStatus::class)->findOrDefault('nope'); // VendorStatus::Open (first case)
+supercharge(VendorStatus::class)->options();              // ['open' => 'Open', 'closed' => 'Closed']
+```
+
+| Scenario | Recommended approach |
+|----------|---------------------|
+| You own the enum | `use EnumExtension` — native `Status::Draft->is(...)` |
+| Third-party / vendor enum | `supercharge(VendorEnum::class)->find($key)` |
+| One-off comparison | `supercharge($case)->is('foo')` |
+
+**Notes:**
+
+- **Backed enums only** — same constraint as `EnumExtension`. Pure unit enums throw `InvalidArgumentException`.
+- `find()` / `findOrDefault()` on the class wrapper return **native enum cases** (not wrappers). Wrap the result with `supercharge()` when you need instance helpers.
+- Custom enum methods remain available via `supercharge($case)->yourMethod()` (forwarded with `__call`).
+- Enums that already use `EnumExtension` work with `supercharge()` too; the wrapper delegates to existing methods when present.
 
 ## Modular composition
 

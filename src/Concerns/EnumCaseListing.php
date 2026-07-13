@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace BensonDevs\SuperchargedEnums\Concerns;
 
+use BensonDevs\SuperchargedEnums\Support\BackedEnumCaseListing;
+
 trait EnumCaseListing
 {
     public static function names(): array
     {
-        return array_column(self::cases(), column_key: 'name');
+        return BackedEnumCaseListing::names(static::class);
     }
 
     public static function values(): array
     {
-        return array_column(self::cases(), column_key: 'value');
+        return BackedEnumCaseListing::values(static::class);
     }
 }

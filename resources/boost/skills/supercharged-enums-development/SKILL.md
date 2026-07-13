@@ -1,6 +1,6 @@
 ---
 name: supercharged-enums-development
-description: Build backed PHP enums with EnumExtension — lookup, select maps, comparisons, labels, and bundled Common enums. Use when creating or editing enums, form options, status/state logic, or unit conversions in bensondevs/supercharged-enums.
+description: Build backed PHP enums with EnumExtension — lookup, select maps, comparisons, labels, bundled Common enums, and runtime supercharge() for unextended enums. Use when creating or editing enums, form options, status/state logic, unit conversions, or wrapping vendor enums in bensondevs/supercharged-enums.
 ---
 
 # Supercharged Enums Development
@@ -14,6 +14,7 @@ Use this skill when working with `bensondevs/supercharged-enums`:
 - Building `<select>` options or API label maps
 - Comparing, ordering, or navigating enum cases
 - Using bundled domain enums under `BensonDevs\SuperchargedEnums\Common\`
+- Wrapping vendor or unextended backed enums with `supercharge()`
 
 ## Requirements
 
@@ -36,6 +37,16 @@ enum Status: string
 ```
 
 Or use a bundled enum from `BensonDevs\SuperchargedEnums\Common\{Domain}\*`.
+
+For enums you cannot edit (vendor, generated), use runtime wrapping:
+
+```php
+use function BensonDevs\SuperchargedEnums\supercharge;
+
+supercharge(VendorStatus::Open)->is('open');
+supercharge(VendorStatus::class)->find('open');
+supercharge($case)->unwrap(); // when a native enum is required
+```
 
 ## Core helpers
 
