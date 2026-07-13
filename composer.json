@@ -51,6 +51,11 @@
         },
         "platform": {
             "php": "8.2.0"
+        },
+        "policy": {
+            "advisories": {
+                "block": false
+            }
         }
     },
     "scripts": {
