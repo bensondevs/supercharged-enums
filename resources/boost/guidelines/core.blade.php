@@ -55,5 +55,6 @@ use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumCast;
 5. **Prefer bundled `Common\` enums** for standard domains (HTTP, time, measure, finance, logging, etc.) before inventing new enums.
 6. **Use `supercharge()`** for backed enums you cannot modify (vendor, generated). Pass a case for instance helpers or `SomeEnum::class` for `find()` / `options()`. Call `unwrap()` when a native enum is required.
 7. **Use `SuperchargedEnumCast::of()`** on Laravel model attributes for vendor enums — returns `SuperchargedEnum` on read, stores backing value in DB. Strict by default; pass `lenient: true` for legacy columns with invalid data.
+8. **JSON array columns** — use `EnumExtensionCollectionCast::of()` for enums with `EnumExtension` (returns a `Collection` of native cases); use `SuperchargedEnumArrayCast::of()` or `supercharge(Enum::class)->arrayCast()` for vendor enums (returns an array of `SuperchargedEnum` wrappers). Both casts encode/decode JSON and support `lenient: true` on read.
 
 Full documentation: https://github.com/bensondevs/supercharged-enums

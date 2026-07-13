@@ -70,6 +70,29 @@ protected function casts(): array
 // $order->toArray()['status'] — backing scalar
 ```
 
+### JSON array columns
+
+```php
+use BensonDevs\SuperchargedEnums\Laravel\Casts\EnumExtensionCollectionCast;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumArrayCast;
+
+protected function casts(): array
+{
+    return [
+        'statuses' => EnumExtensionCollectionCast::of(Status::class),
+        'legacy_statuses' => EnumExtensionCollectionCast::of(Status::class, lenient: true),
+        'permissions' => SuperchargedEnumArrayCast::of(VendorPermission::class),
+        'permissions' => supercharge(VendorPermission::class)->arrayCast(),
+    ];
+}
+
+// $order->statuses[0]->is('open') — native enum (Collection on read)
+// $order->permissions[0]->is('read') — SuperchargedEnum wrapper (array on read)
+// $order->toArray()['statuses'] — ['open', 'closed']
+```
+
+- **EnumExtensionCollectionCast** — for enums you own with `EnumExtension`; uses `find()` / alias / `findOrDefault()` per element.
+- **SuperchargedEnumArrayCast** — for vendor enums; same strict/lenient semantics as `SuperchargedEnumCast`.
 - **Strict (default):** invalid DB value throws on read (like Laravel's enum cast).
 - **Lenient:** `lenient: true` uses `findOrDefault()` on read for legacy bad data.
 - **Writes** always validate — invalid assignment throws.

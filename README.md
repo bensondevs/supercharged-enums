@@ -480,11 +480,46 @@ $order->status->unwrap();           // native OrderStatus for type-hinted APIs
 $order->toArray()['status'];        // 'open' (backing value, not wrapper)
 ```
 
+#### JSON array columns
+
+For attributes that store **arrays** of enum backing values in a JSON column:
+
+```php
+use BensonDevs\SuperchargedEnums\EnumExtension;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\EnumExtensionCollectionCast;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumArrayCast;
+
+class Order extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            // EnumExtension enums — Collection of native cases on read
+            'statuses' => EnumExtensionCollectionCast::of(OrderStatus::class),
+            'legacy_statuses' => EnumExtensionCollectionCast::of(OrderStatus::class, lenient: true),
+
+            // Vendor / wild enums — array of SuperchargedEnum wrappers on read
+            'permissions' => SuperchargedEnumArrayCast::of(VendorPermission::class),
+            'legacy_permissions' => SuperchargedEnumArrayCast::of(VendorPermission::class, lenient: true),
+
+            // Via supercharge() helper
+            'permissions' => supercharge(VendorPermission::class)->arrayCast(),
+        ];
+    }
+}
+
+$order->statuses[0]->is('open');              // native enum with EnumExtension
+$order->permissions[0]->is('read');           // SuperchargedEnum wrapper
+$order->toArray()['statuses'];              // ['open', 'closed'] — backing values
+```
+
 | Scenario | Recommended approach |
 |----------|---------------------|
-| You own the enum | `use EnumExtension` on the enum + Laravel's built-in enum cast |
-| Vendor enum on a model attribute | `SuperchargedEnumCast::of(VendorEnum::class)` |
-| Legacy column with bad data | `SuperchargedEnumCast::of(VendorEnum::class, lenient: true)` |
+| You own the enum (scalar) | `use EnumExtension` on the enum + Laravel's built-in enum cast |
+| You own the enum (JSON array) | `EnumExtensionCollectionCast::of(YourEnum::class)` |
+| Vendor enum on a model attribute (scalar) | `SuperchargedEnumCast::of(VendorEnum::class)` |
+| Vendor enum on a model attribute (JSON array) | `SuperchargedEnumArrayCast::of(VendorEnum::class)` |
+| Legacy column with bad data | `lenient: true` on the relevant cast |
 
 Requires `illuminate/database` (included in Laravel). Invalid values on **assignment** always throw; lenient mode applies to **reading** unknown DB values only.
 

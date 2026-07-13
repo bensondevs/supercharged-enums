@@ -13,7 +13,7 @@
         "php": "^8.2"
     },
     "suggest": {
-        "illuminate/database": "Required for SuperchargedEnumCast Eloquent casting.",
+        "illuminate/database": "Required for SuperchargedEnumCast, EnumExtensionCollectionCast, and SuperchargedEnumArrayCast Eloquent casting.",
         "illuminate/support": "Required for collect() and Laravel stub publishing (included in all Laravel apps)."
     },
     "require-dev": {
