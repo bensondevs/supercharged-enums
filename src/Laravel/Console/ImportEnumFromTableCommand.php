@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace BensonDevs\SuperchargedEnums\Laravel\Console;
 
-use BensonDevs\SuperchargedEnums\Laravel\Console\Support\EnumFileRenderer;
 use BensonDevs\SuperchargedEnums\Laravel\Console\Support\EnumFromTableBuilder;
+use BensonDevs\SuperchargedEnums\Laravel\Console\Support\EnumImporterNameResolver;
+use BensonDevs\SuperchargedEnums\Laravel\Console\Support\EnumImportWriter;
+use BensonDevs\SuperchargedEnums\Laravel\Console\Support\ImportProgress;
 use BensonDevs\SuperchargedEnums\Laravel\Console\Support\TableColumnDetector;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
@@ -39,7 +40,8 @@ final class ImportEnumFromTableCommand extends Command
     public function handle(
         TableColumnDetector $columnDetector,
         EnumFromTableBuilder $enumBuilder,
-        EnumFileRenderer $fileRenderer,
+        EnumImportWriter $writer,
+        EnumImporterNameResolver $nameResolver,
     ): int {
         $table = (string) $this->argument('table');
         $connection = $this->option('connection');
@@ -54,10 +56,19 @@ final class ImportEnumFromTableCommand extends Command
                 'sort_column' => $this->option('sort-column'),
             ]);
 
-            $rows = DB::connection(is_string($connection) ? $connection : null)
-                ->table($table)
-                ->get()
-                ->all();
+            $query = DB::connection(is_string($connection) ? $connection : null)->table($table);
+            $rowCount = $query->count();
+
+            $progress = ImportProgress::fromOutput($this->output, (bool) $this->option('quiet'));
+            $progress?->start($rowCount, 'Importing rows...');
+
+            $rows = $query->get()->all();
+
+            foreach ($rows as $_) {
+                $progress?->advance();
+            }
+
+            $progress?->finish();
 
             $built = $enumBuilder->build($rows, $columns, [
                 'backing_type' => $this->resolveBackingTypeOption(),
@@ -65,23 +76,24 @@ final class ImportEnumFromTableCommand extends Command
                 'with_aliases' => (bool) $this->option('aliases'),
             ]);
 
+            $uniqueCount = count($built['cases']);
+            $progress?->line("Found {$uniqueCount} unique cases from {$rowCount} rows.");
+
             $class = $this->resolveClassName($table);
             $path = $this->resolveOutputPath($class);
-            $namespace = $this->resolveNamespace();
+            $namespace = $this->resolveNamespace($nameResolver);
 
-            if (File::exists($path) && ! $this->option('force')) {
-                throw new RuntimeException("Enum file already exists at [{$path}]. Use --force to overwrite.");
-            }
-
-            $contents = $fileRenderer->render(
+            $writeResult = $writer->write(
+                $path,
                 $namespace,
                 $class,
                 $built['backing_type'],
                 $built['cases'],
+                [
+                    'force' => (bool) $this->option('force'),
+                    'interactive' => false,
+                ],
             );
-
-            File::ensureDirectoryExists(dirname($path));
-            File::put($path, $contents);
 
             $this->components->info("Enum [{$namespace}\\{$class}] created successfully.");
             $this->components->twoColumnDetail('Table', $table);
@@ -89,8 +101,10 @@ final class ImportEnumFromTableCommand extends Command
             $this->components->twoColumnDetail('Value column', $columns['value']);
             $this->components->twoColumnDetail('Label column', $columns['label'] ?? 'none');
             $this->components->twoColumnDetail('Sort column', $columns['sort']);
-            $this->components->twoColumnDetail('Cases', (string) count($built['cases']));
-            $this->components->twoColumnDetail('Path', $path);
+            $this->components->twoColumnDetail('Rows processed', (string) $rowCount);
+            $this->components->twoColumnDetail('Unique cases', (string) $uniqueCount);
+            $this->components->twoColumnDetail('Cases', (string) $uniqueCount);
+            $this->components->twoColumnDetail('Path', $writeResult['path']);
 
             return self::SUCCESS;
         } catch (InvalidArgumentException | RuntimeException $exception) {
@@ -139,7 +153,7 @@ final class ImportEnumFromTableCommand extends Command
         return base_path($relativePath . '/' . $class . '.php');
     }
 
-    private function resolveNamespace(): string
+    private function resolveNamespace(EnumImporterNameResolver $nameResolver): string
     {
         $namespace = $this->option('namespace');
 
@@ -147,13 +161,6 @@ final class ImportEnumFromTableCommand extends Command
             return trim($namespace, '\\');
         }
 
-        $relativePath = str_replace('\\', '/', (string) $this->option('path'));
-        $segments = array_values(array_filter(explode('/', trim($relativePath, '/'))));
-
-        if ($segments !== [] && $segments[0] === 'app') {
-            $segments[0] = 'App';
-        }
-
-        return implode('\\', array_map(static fn (string $segment): string => Str::studly($segment), $segments));
+        return $nameResolver->namespaceFromPath((string) $this->option('path'));
     }
 }

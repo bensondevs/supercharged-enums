@@ -13,6 +13,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -77,6 +78,54 @@ final class EnumFromTableBuilder
     }
 
     /**
+     * @param  list<object|array<string, mixed>>  $rows
+     * @param  array{
+     *     backing_type?: ?string,
+     *     with_labels?: bool,
+     *     with_aliases?: bool,
+     *     on_duplicate?: string,
+     * }  $options
+     * @return array{
+     *     backing_type: string,
+     *     cases: list<BuiltEnumCase>,
+     * }
+     */
+    public function buildFromNormalizedRows(array $rows, array $options = []): array
+    {
+        if ($rows === []) {
+            throw new \InvalidArgumentException('No rows were provided to import.');
+        }
+
+        $columns = [
+            'id' => 'id',
+            'value' => 'value',
+            'name' => 'name',
+            'label' => 'label',
+            'sort' => 'sort',
+            'value_is_integer' => $this->normalizedRowsUseIntegerValues($rows),
+            'available_columns' => ['id', 'value', 'name', 'label', 'sort'],
+        ];
+
+        return $this->build($rows, $columns, $options);
+    }
+
+    /**
+     * @param  list<object|array<string, mixed>>  $rows
+     */
+    private function normalizedRowsUseIntegerValues(array $rows): bool
+    {
+        foreach ($rows as $row) {
+            $value = ((array) $row)['value'] ?? null;
+
+            if ($value !== null && ! is_int($value) && ! (is_string($value) && is_numeric($value) && (string) (int) $value === $value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param  list<object>  $rows
      * @return list<object>
      */
@@ -96,6 +145,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -142,6 +192,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -150,6 +201,14 @@ final class EnumFromTableBuilder
      */
     private function resolveCaseName(array $row, array $columns, string | int $backingValue): string
     {
+        if (isset($columns['name']) && is_string($columns['name']) && array_key_exists($columns['name'], $row)) {
+            $source = trim((string) $row[$columns['name']]);
+
+            if ($source !== '') {
+                return $this->toValidCaseName($source);
+            }
+        }
+
         $source = $columns['value'] === $columns['id']
             ? $this->firstPresentString($row, ['name', 'slug', 'code', 'label', 'title'])
             : (string) $row[$columns['value']];
@@ -201,6 +260,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -224,6 +284,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -249,6 +310,7 @@ final class EnumFromTableBuilder
      * @param  array{
      *     id: string,
      *     value: string,
+     *     name?: ?string,
      *     label: ?string,
      *     sort: string,
      *     value_is_integer: bool,
@@ -274,10 +336,14 @@ final class EnumFromTableBuilder
 
         if ($backingType === 'int' && $columns['value'] === $columns['id']) {
             $alternate = $this->firstPresentString($row, ['name', 'slug', 'code']);
+        } elseif ($backingType === 'int' && isset($columns['name']) && is_string($columns['name'])) {
+            $alternate = $this->firstPresentString($row, [$columns['name']]);
+        } else {
+            $alternate = null;
+        }
 
-            if ($alternate !== null && $alternate !== (string) $backingValue) {
-                $aliases[] = $alternate;
-            }
+        if ($alternate !== null && $alternate !== (string) $backingValue) {
+            $aliases[] = $alternate;
         }
 
         return array_values(array_unique($aliases, SORT_REGULAR));

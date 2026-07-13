@@ -114,7 +114,9 @@ protected function casts(): array
 - **Lenient:** `lenient: true` uses `findOrDefault()` on read for legacy bad data.
 - **Writes** always validate — invalid assignment throws.
 
-## Import from legacy lookup tables
+## Import from legacy lookup tables (beta)
+
+**Beta:** These import commands are experimental and may change in minor releases.
 
 Generate a backed enum with `EnumExtension` from an existing database table:
 
@@ -130,7 +132,30 @@ Useful flags:
 - `--no-labels` — skip `getLabel()` even when a label column exists
 - `--path=app/Enums` — output directory (namespace is derived from the path)
 
-Default column detection: value from `slug`, `code`, `name`, or `id`; labels from `label`, `title`, or `description`.
+Default column detection: value from `slug`, `code`, `name`, or `id`; labels from `label`, `title`, or `description`. Shows a progress bar and reports unique cases found. This feature is currently beta.
+
+## Enum importers (beta)
+
+**Beta:** These import commands are experimental and may change in minor releases.
+
+For multi-table or repeatable imports, scaffold an importer:
+
+```bash
+php artisan make:enum-importer OccupancyEnumImporter
+php artisan supercharged-enums:import-enum-using OccupancyEnumImporter
+```
+
+Importer methods:
+
+- `sources()` — tables, optionally `table => fn (Builder $q) => $q->where(...)`
+- `resolveUsing()` — per-table `fn (array $attributes) => ['value' => $attributes['code'], 'name' => $attributes['code'], 'label' => $attributes['name'], ...]`
+- `as()` — optional enum class name override
+- `onDuplicate()` — `fail` (default) or `last-wins`
+- `aliases()` — emit `alias()` for legacy keys
+
+Default resolver reads `$attributes['id']`, `$attributes['name']`, `$attributes['label']`.
+
+Shows a progress bar while importing and reports unique cases found. Existing enum files prompt before overwrite; `--force` overwrites, `--no-interaction` fails if the file exists. This feature is currently beta.
 
 ## Core helpers
 

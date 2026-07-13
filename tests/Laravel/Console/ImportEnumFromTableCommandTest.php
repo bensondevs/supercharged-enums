@@ -62,7 +62,10 @@ class ImportEnumFromTableCommandTest extends TestCase
         $this->artisan('supercharged-enums:import-from-table', [
             'table' => 'order_statuses',
             '--class' => 'OrderStatus',
-        ])->assertSuccessful();
+        ])
+            ->expectsOutputToContain('Found 2 unique cases from 2 rows.')
+            ->expectsOutputToContain('Unique cases')
+            ->assertSuccessful();
 
         $path = $this->tempBasePath . '/app/Enums/OrderStatus.php';
         expect(file_exists($path))->toBeTrue();

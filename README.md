@@ -88,7 +88,9 @@ enum Status: string
 - If your app already has `stubs/enum.backed.stub` (for example from `php artisan stub:publish`), use `--force` to overwrite — that replaces your existing customization.
 - Stub publishing is separate from [Laravel Boost](#laravel-boost); Boost skills and guidelines do not require publishing stubs.
 
-### Import enum from a legacy lookup table
+**Beta:** Enum import commands are experimental. APIs and generated output may change in minor releases.
+
+### Import enum from a legacy lookup table (beta)
 
 When migrating from database lookup tables to backed enums, generate a ready-to-use enum from existing rows:
 
@@ -115,7 +117,67 @@ php artisan supercharged-enums:import-from-table order_statuses \
 
 **Generated output** includes `EnumExtension`, one case per table row, optional `getLabel()` when a label column exists, and optional `alias()` with `--aliases` (maps legacy integer IDs for string-backed enums, or legacy string keys for int-backed enums).
 
-This command is Laravel-only and requires a database connection. It does not drop the legacy table or update models automatically.
+A progress bar is shown while rows are read, followed by a summary of unique cases found.
+
+This command is Laravel-only and requires a database connection. It does not drop the legacy table or update models automatically. This feature is currently beta.
+
+### Enum importers (beta)
+
+For repeatable imports across multiple tables, query filters, or custom column mappings, scaffold an importer class:
+
+```bash
+php artisan make:enum-importer OccupancyEnumImporter
+```
+
+This creates `app/EnumImporters/OccupancyEnumImporter.php` extending `EnumImporter`. Configure sources and optional resolvers:
+
+```php
+public function sources(): array
+{
+    return [
+        'occupancy_types',
+        'legacy_occupancies' => fn (Builder $query) => $query->where('active', true),
+    ];
+}
+
+public function resolveUsing(): array
+{
+    return [
+        'occupancy_types' => fn (array $attributes) => [
+            'id' => $attributes['id'],
+            'value' => $attributes['code'],
+            'name' => $attributes['code'],
+            'label' => $attributes['name'],
+            'sort' => $attributes['id'],
+        ],
+    ];
+}
+
+// public function as(): string { return 'PowerfulEnum'; }
+// public function onDuplicate(): string { return 'last-wins'; }
+```
+
+Run the importer:
+
+```bash
+php artisan supercharged-enums:import-enum-using OccupancyEnumImporter
+```
+
+**Importer API:**
+
+| Method | Purpose |
+|--------|---------|
+| `sources()` | Table names, optionally with query closures |
+| `resolveUsing()` | Per-table row resolver returning `value`, `name`, `label`, `id`, `sort` from `$attributes['column']` |
+| `as()` | Target enum class name (default: `OccupancyEnumImporter` → `OccupancyEnum`) |
+| `onDuplicate()` | `fail` (default) or `last-wins` when backing values collide across sources |
+| `aliases()` | Emit `alias()` mappings for legacy keys |
+
+**Overwrite behavior:** if the enum file already exists, the command prompts for confirmation. Use `--force` to skip the prompt, or `--no-interaction` to fail without overwriting (CI-safe). Override duplicate handling per run with `--duplicates=last-wins`.
+
+Both import commands show a progress bar while reading rows and report how many unique cases were found.
+
+Use `import-from-table` for one-off imports; use importers when the same migration will be re-run or spans multiple sources. This feature is currently beta.
 
 ## Quick start
 
