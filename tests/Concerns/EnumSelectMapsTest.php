@@ -8,6 +8,8 @@ use BensonDevs\SuperchargedEnums\Tests\Fixtures\EnumWithLabelMethod;
 use BensonDevs\SuperchargedEnums\Tests\Fixtures\EnumWithSelectables;
 use BensonDevs\SuperchargedEnums\Tests\Fixtures\EnumWithSelectablesAndUnselectables;
 use BensonDevs\SuperchargedEnums\Tests\Fixtures\EnumWithUnselectables;
+use BensonDevs\SuperchargedEnums\Tests\Fixtures\StringSampleEnum;
+use Illuminate\Support\Collection;
 
 test('options prefers getLabel when present', function () {
     expect(EnumWithGetLabel::options())->toBe([
@@ -63,4 +65,32 @@ test('asSelectDescriptions falls back to getLabel when getDescription is absent'
         'one' => 'First',
         'two' => 'Second',
     ]);
+});
+
+test('all returns all cases when no filters are defined', function () {
+    expect(StringSampleEnum::all())->toBe(StringSampleEnum::cases());
+    expect(StringSampleEnum::all())->toBe(StringSampleEnum::filteredCases());
+});
+
+test('all respects selectables in declaration order', function () {
+    expect(EnumWithSelectables::all())->toBe([
+        EnumWithSelectables::Beta,
+        EnumWithSelectables::Gamma,
+    ]);
+    expect(EnumWithSelectables::all())->toBe(EnumWithSelectables::filteredCases());
+});
+
+test('all respects unselectables', function () {
+    expect(EnumWithUnselectables::all())->toBe([
+        EnumWithUnselectables::Visible,
+        EnumWithUnselectables::AlsoVisible,
+    ]);
+    expect(EnumWithUnselectables::all())->toBe(EnumWithUnselectables::filteredCases());
+});
+
+test('collect returns a collection of filtered cases', function () {
+    $collection = StringSampleEnum::collect();
+
+    expect($collection)->toBeInstanceOf(Collection::class);
+    expect($collection->all())->toBe(StringSampleEnum::all());
 });

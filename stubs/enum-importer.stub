@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use BensonDevs\SuperchargedEnums\Laravel\Console\Contracts\EnumImporter;
+use Illuminate\Database\Query\Builder;
+
+class {{ class }} extends EnumImporter
+{
+    public function sources(): array
+    {
+        return [
+            //
+            // 'legacy_table' => fn (Builder $query) => $query->where('active', true),
+        ];
+    }
+
+    public function resolveUsing(): array
+    {
+        return [
+            // 'table_name' => fn (array $attributes) => [
+            //     'id' => $attributes['id'],
+            //     'value' => $attributes['code'],
+            //     'name' => $attributes['code'],
+            //     'label' => $attributes['name'],
+            //     'sort' => $attributes['id'],
+            // ],
+        ];
+    }
+
+    // public function as(): string
+    // {
+    //     return 'PowerfulEnum';
+    // }
+
+    // public function onDuplicate(): string
+    // {
+    //     return 'last-wins';
+    // }
+}

@@ -1,5 +1,10 @@
 # ⚡ Supercharged Enums
 
+[![CI](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml/badge.svg)](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml)
+[![Stable Version](https://img.shields.io/packagist/v/bensondevs/supercharged-enums?label=stable&style=flat-square)](https://packagist.org/packages/bensondevs/supercharged-enums)
+[![Total Downloads](https://img.shields.io/packagist/dt/bensondevs/supercharged-enums?style=flat-square)](https://packagist.org/packages/bensondevs/supercharged-enums)
+[![Type Coverage](https://img.shields.io/badge/type--coverage-100%25-brightgreen?style=flat-square)](https://github.com/bensondevs/supercharged-enums/actions/workflows/tests.yml)
+
 Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtension` trait—no framework dependencies. The package also ships optional ready-made enums for everyday domains (HTTP, calendar and time, measurement units, finance, logging, deployment environments, and more) under `BensonDevs\SuperchargedEnums\Common\`, each wired with the same helpers. See [Bundled Common enums](#bundled-common-enums).
 
 **Requirements:** PHP 8.2 or later. The `EnumExtension` trait targets **backed** enums (`string` or `int`). Pure unit enums without a backing type are not supported by lookup normalization.
@@ -17,6 +22,8 @@ Backed enum helpers (`find`, `options`, comparisons, labels) via the `EnumExtens
   - [Naming](#naming)
   - [Select maps](#select-maps)
   - [Comparisons and ordering](#comparisons-and-ordering)
+- [Runtime supercharge](#runtime-supercharge)
+  - [Laravel Eloquent casting](#laravel-eloquent-casting)
 - [Modular composition](#modular-composition)
 - [Bundled Common enums](#bundled-common-enums)
 - [Development](#development)
@@ -85,6 +92,97 @@ enum Status: string
 - Only **backed** enums (`--string` / `--int`) use this stub. Pure unit enums are unchanged.
 - If your app already has `stubs/enum.backed.stub` (for example from `php artisan stub:publish`), use `--force` to overwrite — that replaces your existing customization.
 - Stub publishing is separate from [Laravel Boost](#laravel-boost); Boost skills and guidelines do not require publishing stubs.
+
+**Beta:** Enum import commands are experimental. APIs and generated output may change in minor releases.
+
+### Import enum from a legacy lookup table (beta)
+
+When migrating from database lookup tables to backed enums, generate a ready-to-use enum from existing rows:
+
+```bash
+php artisan supercharged-enums:import-from-table order_statuses \
+  --class=OrderStatus          # optional; defaults from the table name
+  --string|--int               # optional; overrides auto backing detection
+  --value-column=name          # optional; overrides auto-detection
+  --label-column=title         # optional
+  --aliases                    # optional; emit alias() for legacy keys
+  --path=app/Enums             # optional
+  --force                      # overwrite an existing file
+```
+
+**Column auto-detection defaults:**
+
+| Purpose | Detection order |
+|---------|-----------------|
+| Backing value | `slug`, `code`, `name`, then `id` |
+| Human label | `label`, `title`, `description` (skips the value column) |
+| Case order | `sort_order`, `position`, `order`, then `id` |
+
+**Backing type:** auto-detects `int` when the value column is `id` (or an integer column); otherwise `string`. Use `--string` or `--int` to override.
+
+**Generated output** includes `EnumExtension`, one case per table row, optional `getLabel()` when a label column exists, and optional `alias()` with `--aliases` (maps legacy integer IDs for string-backed enums, or legacy string keys for int-backed enums).
+
+A progress bar is shown while rows are read, followed by a summary of unique cases found.
+
+This command is Laravel-only and requires a database connection. It does not drop the legacy table or update models automatically. This feature is currently beta.
+
+### Enum importers (beta)
+
+For repeatable imports across multiple tables, query filters, or custom column mappings, scaffold an importer class:
+
+```bash
+php artisan make:enum-importer OccupancyEnumImporter
+```
+
+This creates `app/EnumImporters/OccupancyEnumImporter.php` extending `EnumImporter`. Configure sources and optional resolvers:
+
+```php
+public function sources(): array
+{
+    return [
+        'occupancy_types',
+        'legacy_occupancies' => fn (Builder $query) => $query->where('active', true),
+    ];
+}
+
+public function resolveUsing(): array
+{
+    return [
+        'occupancy_types' => fn (array $attributes) => [
+            'id' => $attributes['id'],
+            'value' => $attributes['code'],
+            'name' => $attributes['code'],
+            'label' => $attributes['name'],
+            'sort' => $attributes['id'],
+        ],
+    ];
+}
+
+// public function as(): string { return 'PowerfulEnum'; }
+// public function onDuplicate(): string { return 'last-wins'; }
+```
+
+Run the importer:
+
+```bash
+php artisan supercharged-enums:import-enum-using OccupancyEnumImporter
+```
+
+**Importer API:**
+
+| Method | Purpose |
+|--------|---------|
+| `sources()` | Table names, optionally with query closures |
+| `resolveUsing()` | Per-table row resolver returning `value`, `name`, `label`, `id`, `sort` from `$attributes['column']` |
+| `as()` | Target enum class name (default: `OccupancyEnumImporter` → `OccupancyEnum`) |
+| `onDuplicate()` | `fail` (default) or `last-wins` when backing values collide across sources |
+| `aliases()` | Emit `alias()` mappings for legacy keys |
+
+**Overwrite behavior:** if the enum file already exists, the command prompts for confirmation. Use `--force` to skip the prompt, or `--no-interaction` to fail without overwriting (CI-safe). Override duplicate handling per run with `--duplicates=last-wins`.
+
+Both import commands show a progress bar while reading rows and report how many unique cases were found.
+
+Use `import-from-table` for one-off imports; use importers when the same migration will be re-run or spans multiple sources. This feature is currently beta.
 
 ## Quick start
 
@@ -281,7 +379,12 @@ Build `value => label` maps for HTML `<select>` elements, JSON APIs, and similar
 Status::options();              // ['draft' => 'Draft', 'published' => 'Published'] — backing value → short label
 Status::asSelectOptions();      // Alias for options()
 Status::asSelectDescriptions(); // Backing value → longer description text
+Status::all();                  // [Status::Draft, Status::Published] — filtered cases as array
+Status::collect();              // Illuminate\Support\Collection of filtered cases
+Status::filteredCases();        // Same cases as all() (alias)
 ```
+
+`collect()` requires `illuminate/support` (included in Laravel apps). Without it, calling `collect()` throws a runtime exception with install instructions.
 
 **Label resolution** (`options()`), first match wins:
 
@@ -404,6 +507,142 @@ Month::min('march', 'october');                // Month::March
 Month::max(Month::March, 'october');           // Month::October
 ```
 
+## Runtime supercharge
+
+When you cannot add `EnumExtension` to an enum (vendor code, generated enums, or one-off usage), wrap it at runtime with `supercharge()`. PHP cannot attach methods to enum instances dynamically, so this returns a **wrapper object** — not the native enum type. Use `unwrap()` when an API expects the raw case.
+
+```php
+use function BensonDevs\SuperchargedEnums\supercharge;
+
+enum VendorStatus: string
+{
+    case Open = 'open';
+    case Closed = 'closed';
+}
+
+// Instance API — comparisons, naming, navigation
+$status = supercharge(VendorStatus::Open);
+$status->is('open');              // true
+$status->getName();               // "Open"
+$status->value;                   // 'open' (via property access)
+$status->unwrap();                // VendorStatus::Open
+
+// Static API — lookup, select maps, aggregates (pass the class string)
+supercharge(VendorStatus::class)->find('open');           // VendorStatus::Open
+supercharge(VendorStatus::class)->findOrDefault('nope'); // VendorStatus::Open (first case)
+supercharge(VendorStatus::class)->options();              // ['open' => 'Open', 'closed' => 'Closed']
+```
+
+| Scenario | Recommended approach |
+|----------|---------------------|
+| You own the enum | `use EnumExtension` — native `Status::Draft->is(...)` |
+| Third-party / vendor enum | `supercharge(VendorEnum::class)->find($key)` |
+| One-off comparison | `supercharge($case)->is('foo')` |
+
+**Notes:**
+
+- **Backed enums only** — same constraint as `EnumExtension`. Pure unit enums throw `InvalidArgumentException`.
+- `find()` / `findOrDefault()` on the class wrapper return **native enum cases** (not wrappers). Wrap the result with `supercharge()` when you need instance helpers.
+- Custom enum methods remain available via `supercharge($case)->yourMethod()` (forwarded with `__call`).
+- Enums that already use `EnumExtension` work with `supercharge()` too; runtime configuration overrides `default()`, select filtering, and related helpers when set.
+
+### Runtime configuration
+
+Configure vendor enums at bootstrap (e.g. in `AppServiceProvider::boot()`) when you cannot add `EnumExtension` or need app-specific defaults and select lists:
+
+```php
+use BensonDevs\SuperchargedEnums\SuperchargedEnumType;
+use function BensonDevs\SuperchargedEnums\supercharge;
+use Vendor\Package\VendorStatus;
+
+supercharge(VendorStatus::class)->configureUsing(
+    fn (SuperchargedEnumType $type) => $type
+        ->setDefault(VendorStatus::Closed)
+        ->setSelectables([VendorStatus::Open, 'closed'])
+        // ->setUnselectables([...])  // ignored when selectables is set
+);
+
+// Anywhere in the app
+supercharge(VendorStatus::class)->default(); // VendorStatus::Closed
+supercharge(VendorStatus::class)->all();     // only configured selectables
+supercharge(VendorStatus::class)->findOrDefault('unknown'); // falls back to configured default
+```
+
+Runtime configuration takes precedence over native enum methods (`default()`, `selectables()`, etc.). `find()` still resolves any declared case — filtering applies to `all()`, `options()`, and related select helpers only.
+
+### Laravel Eloquent casting
+
+For Laravel models whose attributes use vendor enums, add [`SuperchargedEnumCast`](src/Laravel/Casts/SuperchargedEnumCast.php) so the attribute is a `SuperchargedEnum` on read while the database stores the backing scalar.
+
+```php
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumCast;
+use Vendor\Package\OrderStatus;
+
+class Order extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            // Strict (default) — invalid DB value throws on read
+            'status' => SuperchargedEnumCast::of(OrderStatus::class),
+
+            // Lenient — unknown DB value falls back to default case
+            'legacy_status' => SuperchargedEnumCast::of(OrderStatus::class, lenient: true),
+
+            // Via supercharge() helper
+            'status' => supercharge(OrderStatus::class)->cast(),
+        ];
+    }
+}
+
+$order->status->is('open');
+$order->status->unwrap();           // native OrderStatus for type-hinted APIs
+$order->toArray()['status'];        // 'open' (backing value, not wrapper)
+```
+
+#### JSON array columns
+
+For attributes that store **arrays** of enum backing values in a JSON column:
+
+```php
+use BensonDevs\SuperchargedEnums\EnumExtension;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\EnumExtensionCollectionCast;
+use BensonDevs\SuperchargedEnums\Laravel\Casts\SuperchargedEnumArrayCast;
+
+class Order extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            // EnumExtension enums — Collection of native cases on read
+            'statuses' => EnumExtensionCollectionCast::of(OrderStatus::class),
+            'legacy_statuses' => EnumExtensionCollectionCast::of(OrderStatus::class, lenient: true),
+
+            // Vendor / wild enums — array of SuperchargedEnum wrappers on read
+            'permissions' => SuperchargedEnumArrayCast::of(VendorPermission::class),
+            'legacy_permissions' => SuperchargedEnumArrayCast::of(VendorPermission::class, lenient: true),
+
+            // Via supercharge() helper
+            'permissions' => supercharge(VendorPermission::class)->arrayCast(),
+        ];
+    }
+}
+
+$order->statuses[0]->is('open');              // native enum with EnumExtension
+$order->permissions[0]->is('read');           // SuperchargedEnum wrapper
+$order->toArray()['statuses'];              // ['open', 'closed'] — backing values
+```
+
+| Scenario | Recommended approach |
+|----------|---------------------|
+| You own the enum (scalar) | `use EnumExtension` on the enum + Laravel's built-in enum cast |
+| You own the enum (JSON array) | `EnumExtensionCollectionCast::of(YourEnum::class)` |
+| Vendor enum on a model attribute (scalar) | `SuperchargedEnumCast::of(VendorEnum::class)` |
+| Vendor enum on a model attribute (JSON array) | `SuperchargedEnumArrayCast::of(VendorEnum::class)` |
+| Legacy column with bad data | `lenient: true` on the relevant cast |
+
+Requires `illuminate/database` (included in Laravel). Invalid values on **assignment** always throw; lenient mode applies to **reading** unknown DB values only.
+
 ## Modular composition
 
 Individual concerns live under [`src/Concerns/`](src/Concerns/) and can be used without the full trait:
@@ -467,8 +706,10 @@ Behavior is covered by the [Pest test suite](tests/).
 ## Development
 
 ```bash
-composer test   # run Pest tests
-composer lint   # run Laravel Pint
+composer test          # run Pest tests
+composer lint          # run Laravel Pint (check only)
+composer analyse       # PHPStan
+composer type-coverage # PHPStan type coverage (100% enforced)
 ```
 
 ## Support

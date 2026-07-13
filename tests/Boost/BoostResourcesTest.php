@@ -33,7 +33,7 @@ function parseBoostSkillFrontmatter(string $content): array
 }
 
 it('ships valid Laravel Boost skills', function (): void {
-    $skillFiles = glob(__DIR__.'/../../resources/boost/skills/*/SKILL.md') ?: [];
+    $skillFiles = glob(__DIR__ . '/../../resources/boost/skills/*/SKILL.md') ?: [];
 
     expect($skillFiles)->not->toBeEmpty();
 
@@ -53,7 +53,7 @@ it('ships valid Laravel Boost skills', function (): void {
 });
 
 it('ships Laravel Boost guidelines', function (): void {
-    $guidelineFile = __DIR__.'/../../resources/boost/guidelines/core.blade.php';
+    $guidelineFile = __DIR__ . '/../../resources/boost/guidelines/core.blade.php';
 
     expect(file_exists($guidelineFile))->toBeTrue();
 

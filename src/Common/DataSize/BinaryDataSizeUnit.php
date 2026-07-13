@@ -52,22 +52,22 @@ enum BinaryDataSizeUnit: string
 
     public function toGibibytes(int $unit = 1, int $decimalDigits = 2): float
     {
-        return $this->fromBits($this->toBits($unit), 8 * 1_024 ** 3, $decimalDigits);
+        return $this->fromBits($this->toBits($unit), (int) (8 * 1_024 ** 3), $decimalDigits);
     }
 
     public function toTebibytes(int $unit = 1, int $decimalDigits = 2): float
     {
-        return $this->fromBits($this->toBits($unit), 8 * 1_024 ** 4, $decimalDigits);
+        return $this->fromBits($this->toBits($unit), (int) (8 * 1_024 ** 4), $decimalDigits);
     }
 
     public function toPebibytes(int $unit = 1, int $decimalDigits = 2): float
     {
-        return $this->fromBits($this->toBits($unit), 8 * 1_024 ** 5, $decimalDigits);
+        return $this->fromBits($this->toBits($unit), (int) (8 * 1_024 ** 5), $decimalDigits);
     }
 
     public function toExbibytes(int $unit = 1, int $decimalDigits = 2): float
     {
-        return $this->fromBits($this->toBits($unit), 8 * 1_024 ** 6, $decimalDigits);
+        return $this->fromBits($this->toBits($unit), (int) (8 * 1_024 ** 6), $decimalDigits);
     }
 
     private function bitsPerUnit(): int
@@ -77,10 +77,10 @@ enum BinaryDataSizeUnit: string
             self::Byte => 8,
             self::Kibibyte => 8 * 1_024,
             self::Mebibyte => 8 * 1_024 ** 2,
-            self::Gibibyte => 8 * 1_024 ** 3,
-            self::Tebibyte => 8 * 1_024 ** 4,
-            self::Pebibyte => 8 * 1_024 ** 5,
-            self::Exbibyte => 8 * 1_024 ** 6,
+            self::Gibibyte => (int) (8 * 1_024 ** 3),
+            self::Tebibyte => (int) (8 * 1_024 ** 4),
+            self::Pebibyte => (int) (8 * 1_024 ** 5),
+            self::Exbibyte => (int) (8 * 1_024 ** 6),
         };
     }
 }
