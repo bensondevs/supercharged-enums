@@ -448,7 +448,31 @@ supercharge(VendorStatus::class)->options();              // ['open' => 'Open', 
 - **Backed enums only** — same constraint as `EnumExtension`. Pure unit enums throw `InvalidArgumentException`.
 - `find()` / `findOrDefault()` on the class wrapper return **native enum cases** (not wrappers). Wrap the result with `supercharge()` when you need instance helpers.
 - Custom enum methods remain available via `supercharge($case)->yourMethod()` (forwarded with `__call`).
-- Enums that already use `EnumExtension` work with `supercharge()` too; the wrapper delegates to existing methods when present.
+- Enums that already use `EnumExtension` work with `supercharge()` too; runtime configuration overrides `default()`, select filtering, and related helpers when set.
+
+### Runtime configuration
+
+Configure vendor enums at bootstrap (e.g. in `AppServiceProvider::boot()`) when you cannot add `EnumExtension` or need app-specific defaults and select lists:
+
+```php
+use BensonDevs\SuperchargedEnums\SuperchargedEnumType;
+use function BensonDevs\SuperchargedEnums\supercharge;
+use Vendor\Package\VendorStatus;
+
+supercharge(VendorStatus::class)->configureUsing(
+    fn (SuperchargedEnumType $type) => $type
+        ->setDefault(VendorStatus::Closed)
+        ->setSelectables([VendorStatus::Open, 'closed'])
+        // ->setUnselectables([...])  // ignored when selectables is set
+);
+
+// Anywhere in the app
+supercharge(VendorStatus::class)->default(); // VendorStatus::Closed
+supercharge(VendorStatus::class)->all();     // only configured selectables
+supercharge(VendorStatus::class)->findOrDefault('unknown'); // falls back to configured default
+```
+
+Runtime configuration takes precedence over native enum methods (`default()`, `selectables()`, etc.). `find()` still resolves any declared case — filtering applies to `all()`, `options()`, and related select helpers only.
 
 ### Laravel Eloquent casting
 

@@ -55,6 +55,44 @@ final class SuperchargedEnumType
         return SuperchargedEnumArrayCast::of($this->enumClass, $lenient);
     }
 
+    public function configureUsing(callable $callback): void
+    {
+        $callback($this);
+    }
+
+    /**
+     * @param  T  $case
+     * @return $this
+     */
+    public function setDefault(BackedEnum $case): self
+    {
+        SuperchargedEnumConfiguration::for($this->enumClass)->setDefault($case);
+
+        return $this;
+    }
+
+    /**
+     * @param  array<int, T|int|string>  $entries
+     * @return $this
+     */
+    public function setSelectables(array $entries): self
+    {
+        SuperchargedEnumConfiguration::for($this->enumClass)->setSelectables($entries);
+
+        return $this;
+    }
+
+    /**
+     * @param  array<int, T|int|string>  $entries
+     * @return $this
+     */
+    public function setUnselectables(array $entries): self
+    {
+        SuperchargedEnumConfiguration::for($this->enumClass)->setUnselectables($entries);
+
+        return $this;
+    }
+
     /**
      * @param  T|UnitEnum|string|int|null  $key
      * @return T|null
@@ -74,11 +112,7 @@ final class SuperchargedEnumType
      */
     public function findOrDefault(UnitEnum | string | int | null $key, bool $strict = false): BackedEnum
     {
-        if (method_exists($this->enumClass, 'findOrDefault')) {
-            return $this->enumClass::findOrDefault($key, $strict);
-        }
-
-        return BackedEnumLookup::findOrDefault($this->enumClass, $key, $strict);
+        return $this->find($key, $strict) ?? $this->default();
     }
 
     /**
@@ -86,6 +120,13 @@ final class SuperchargedEnumType
      */
     public function default(): BackedEnum
     {
+        $configuration = SuperchargedEnumConfiguration::for($this->enumClass);
+
+        if ($configuration->hasDefault()) {
+            /** @var T */
+            return $configuration->default();
+        }
+
         if (method_exists($this->enumClass, 'default')) {
             return $this->enumClass::default();
         }
@@ -98,10 +139,6 @@ final class SuperchargedEnumType
      */
     public function getDefault(): BackedEnum
     {
-        if (method_exists($this->enumClass, 'getDefault')) {
-            return $this->enumClass::getDefault();
-        }
-
         return $this->default();
     }
 
@@ -146,11 +183,7 @@ final class SuperchargedEnumType
      */
     public function options(): array
     {
-        if (method_exists($this->enumClass, 'options')) {
-            return $this->enumClass::options();
-        }
-
-        return BackedEnumSelectMaps::options($this->enumClass);
+        return BackedEnumSelectMaps::optionsFromCases($this->filteredCases());
     }
 
     /**
@@ -166,11 +199,7 @@ final class SuperchargedEnumType
      */
     public function asSelectDescriptions(): array
     {
-        if (method_exists($this->enumClass, 'asSelectDescriptions')) {
-            return $this->enumClass::asSelectDescriptions();
-        }
-
-        return BackedEnumSelectMaps::asSelectDescriptions($this->enumClass);
+        return BackedEnumSelectMaps::asSelectDescriptionsFromCases($this->filteredCases());
     }
 
     /**
@@ -178,8 +207,14 @@ final class SuperchargedEnumType
      */
     public function filteredCases(): array
     {
-        if (method_exists($this->enumClass, 'filteredCases')) {
-            return $this->enumClass::filteredCases();
+        $configuration = SuperchargedEnumConfiguration::for($this->enumClass);
+
+        if ($configuration->hasSelectables()) {
+            return BackedEnumSelectMaps::filterCases($this->enumClass, $configuration->selectables(), null);
+        }
+
+        if ($configuration->hasUnselectables()) {
+            return BackedEnumSelectMaps::filterCases($this->enumClass, null, $configuration->unselectables());
         }
 
         return BackedEnumSelectMaps::filteredCases($this->enumClass);
@@ -190,11 +225,7 @@ final class SuperchargedEnumType
      */
     public function all(): array
     {
-        if (method_exists($this->enumClass, 'all')) {
-            return $this->enumClass::all();
-        }
-
-        return BackedEnumSelectMaps::all($this->enumClass);
+        return $this->filteredCases();
     }
 
     /**
@@ -202,11 +233,7 @@ final class SuperchargedEnumType
      */
     public function collect(): object
     {
-        if (method_exists($this->enumClass, 'collect')) {
-            return $this->enumClass::collect();
-        }
-
-        return BackedEnumSelectMaps::collect($this->enumClass);
+        return BackedEnumSelectMaps::collectFromCases($this->filteredCases());
     }
 
     /**

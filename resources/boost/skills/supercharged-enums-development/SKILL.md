@@ -42,12 +42,29 @@ Or use a bundled enum from `BensonDevs\SuperchargedEnums\Common\{Domain}\*`.
 For enums you cannot edit (vendor, generated), use runtime wrapping:
 
 ```php
+use BensonDevs\SuperchargedEnums\SuperchargedEnumType;
 use function BensonDevs\SuperchargedEnums\supercharge;
 
 supercharge(VendorStatus::Open)->is('open');
 supercharge(VendorStatus::class)->find('open');
 supercharge($case)->unwrap(); // when a native enum is required
 ```
+
+Configure defaults and select lists at bootstrap when the enum lacks `EnumExtension`:
+
+```php
+// AppServiceProvider::boot()
+supercharge(VendorStatus::class)->configureUsing(
+    fn (SuperchargedEnumType $type) => $type
+        ->setDefault(VendorStatus::Closed)
+        ->setSelectables([VendorStatus::Open, 'closed'])
+);
+
+supercharge(VendorStatus::class)->default(); // configured default
+supercharge(VendorStatus::class)->all();     // configured selectables only
+```
+
+Runtime configuration overrides native enum methods when both exist.
 
 ## Laravel Eloquent casting
 

@@ -14,8 +14,17 @@ final class BackedEnumSelectMaps
      */
     public static function options(string $enumClass): array
     {
+        return self::optionsFromCases(self::filteredCases($enumClass));
+    }
+
+    /**
+     * @param  array<int, BackedEnum>  $cases
+     * @return array<string, string>
+     */
+    public static function optionsFromCases(array $cases): array
+    {
         $options = [];
-        foreach (self::filteredCases($enumClass) as $case) {
+        foreach ($cases as $case) {
             $options[$case->value] = match (true) {
                 method_exists($case, 'label') => $case->label(),
                 method_exists($case, 'getLabel') => $case->getLabel(),
@@ -33,8 +42,17 @@ final class BackedEnumSelectMaps
      */
     public static function asSelectDescriptions(string $enumClass): array
     {
+        return self::asSelectDescriptionsFromCases(self::filteredCases($enumClass));
+    }
+
+    /**
+     * @param  array<int, BackedEnum>  $cases
+     * @return array<string, string>
+     */
+    public static function asSelectDescriptionsFromCases(array $cases): array
+    {
         $descriptions = [];
-        foreach (self::filteredCases($enumClass) as $enum) {
+        foreach ($cases as $enum) {
             $descriptions[$enum->value] = match (true) {
                 method_exists($enum, 'getDescription') => $enum->getDescription(),
                 method_exists($enum, 'getLabel') => $enum->getLabel(),
@@ -55,19 +73,38 @@ final class BackedEnumSelectMaps
             /** @var array<int, BackedEnum|int|string> $allowed */
             $allowed = $enumClass::selectables();
 
-            return array_values(array_filter(
-                $enumClass::cases(),
-                static fn ($case) => self::caseIsListed($enumClass, $case, $allowed),
-            ));
+            return self::filterCases($enumClass, $allowed, null);
         }
 
         if (method_exists($enumClass, 'unselectables')) {
             /** @var array<int, BackedEnum|int|string> $denied */
             $denied = $enumClass::unselectables();
 
+            return self::filterCases($enumClass, null, $denied);
+        }
+
+        return $enumClass::cases();
+    }
+
+    /**
+     * @param  class-string<BackedEnum>  $enumClass
+     * @param  ?array<int, BackedEnum|int|string>  $selectables
+     * @param  ?array<int, BackedEnum|int|string>  $unselectables
+     * @return array<int, BackedEnum>
+     */
+    public static function filterCases(string $enumClass, ?array $selectables, ?array $unselectables): array
+    {
+        if ($selectables !== null) {
             return array_values(array_filter(
                 $enumClass::cases(),
-                static fn ($case) => ! self::caseIsListed($enumClass, $case, $denied),
+                static fn ($case) => self::caseIsListed($enumClass, $case, $selectables),
+            ));
+        }
+
+        if ($unselectables !== null) {
+            return array_values(array_filter(
+                $enumClass::cases(),
+                static fn ($case) => ! self::caseIsListed($enumClass, $case, $unselectables),
             ));
         }
 
@@ -84,10 +121,10 @@ final class BackedEnumSelectMaps
     }
 
     /**
-     * @param  class-string<BackedEnum>  $enumClass
+     * @param  array<int, BackedEnum>  $cases
      * @return \Illuminate\Support\Collection<int, BackedEnum>
      */
-    public static function collect(string $enumClass): object
+    public static function collectFromCases(array $cases): object
     {
         if (! class_exists(\Illuminate\Support\Collection::class)) {
             throw new \RuntimeException(
@@ -95,7 +132,16 @@ final class BackedEnumSelectMaps
             );
         }
 
-        return new \Illuminate\Support\Collection(self::all($enumClass));
+        return new \Illuminate\Support\Collection($cases);
+    }
+
+    /**
+     * @param  class-string<BackedEnum>  $enumClass
+     * @return \Illuminate\Support\Collection<int, BackedEnum>
+     */
+    public static function collect(string $enumClass): object
+    {
+        return self::collectFromCases(self::all($enumClass));
     }
 
     /**
