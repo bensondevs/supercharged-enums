@@ -114,6 +114,24 @@ protected function casts(): array
 - **Lenient:** `lenient: true` uses `findOrDefault()` on read for legacy bad data.
 - **Writes** always validate — invalid assignment throws.
 
+## Import from legacy lookup tables
+
+Generate a backed enum with `EnumExtension` from an existing database table:
+
+```bash
+php artisan supercharged-enums:import-from-table order_statuses --class=OrderStatus
+```
+
+Useful flags:
+
+- `--string` / `--int` — override auto backing detection
+- `--value-column=` / `--label-column=` — custom column mapping
+- `--aliases` — emit `alias()` for legacy integer IDs (string-backed) or string keys (int-backed)
+- `--no-labels` — skip `getLabel()` even when a label column exists
+- `--path=app/Enums` — output directory (namespace is derived from the path)
+
+Default column detection: value from `slug`, `code`, `name`, or `id`; labels from `label`, `title`, or `description`.
+
 ## Core helpers
 
 ```php

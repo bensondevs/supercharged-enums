@@ -88,6 +88,35 @@ enum Status: string
 - If your app already has `stubs/enum.backed.stub` (for example from `php artisan stub:publish`), use `--force` to overwrite — that replaces your existing customization.
 - Stub publishing is separate from [Laravel Boost](#laravel-boost); Boost skills and guidelines do not require publishing stubs.
 
+### Import enum from a legacy lookup table
+
+When migrating from database lookup tables to backed enums, generate a ready-to-use enum from existing rows:
+
+```bash
+php artisan supercharged-enums:import-from-table order_statuses \
+  --class=OrderStatus          # optional; defaults from the table name
+  --string|--int               # optional; overrides auto backing detection
+  --value-column=name          # optional; overrides auto-detection
+  --label-column=title         # optional
+  --aliases                    # optional; emit alias() for legacy keys
+  --path=app/Enums             # optional
+  --force                      # overwrite an existing file
+```
+
+**Column auto-detection defaults:**
+
+| Purpose | Detection order |
+|---------|-----------------|
+| Backing value | `slug`, `code`, `name`, then `id` |
+| Human label | `label`, `title`, `description` (skips the value column) |
+| Case order | `sort_order`, `position`, `order`, then `id` |
+
+**Backing type:** auto-detects `int` when the value column is `id` (or an integer column); otherwise `string`. Use `--string` or `--int` to override.
+
+**Generated output** includes `EnumExtension`, one case per table row, optional `getLabel()` when a label column exists, and optional `alias()` with `--aliases` (maps legacy integer IDs for string-backed enums, or legacy string keys for int-backed enums).
+
+This command is Laravel-only and requires a database connection. It does not drop the legacy table or update models automatically.
+
 ## Quick start
 
 Add the trait to your own enum, or use a bundled one from `Common\`—same helpers either way.

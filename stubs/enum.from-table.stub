@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use BensonDevs\SuperchargedEnums\EnumExtension;
+
+enum {{ class }}: {{ type }}
+{
+    use EnumExtension;
+
+{{ cases }}{{ label_method }}{{ alias_method }}
+}
